@@ -1,0 +1,12 @@
+파일명: .gitignore
+
+내용:
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+team_ai_usage.db
+.DS_Store
+
+"Commit changes" 클릭

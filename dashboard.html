@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>팀 AI 업무 처리 대시보드</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-badge {
+            background: #667eea;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .logout-btn {
+            background: #ff6b6b;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background: #ff5252;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab-btn {
+            padding: 12px 20px;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .tab-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 22px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        select, textarea, input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+        }
+        
+        select:focus, textarea:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .result-box {
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .result-box.show {
+            display: block;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .result-header h3 {
+            color: #667eea;
+        }
+        
+        .copy-btn {
+            background: #667eea;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .result-content {
+            background: white;
+            padding: 12px;
+            border-radius: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .alert {
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .alert.show {
+            display: block;
+        }
+        
+        .alert-error {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+        }
+        
+        .alert-success {
+            background: #efe;
+            border: 1px solid #cfc;
+            color: #3c3;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .code-block {
+            background: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        
+        .code-block code {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        
+        textarea.code-input {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .tabs {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 -->
+        <div class="header">
+            <h1>🤖 팀 AI 업무 처리 대시보드</h1>
+            <div class="user-info">
+                <span class="user-badge">👤 {{ user }}</span>
+                <a href="/logout" class="logout-btn">로그아웃</a>
+            </div>
+        </div>
+        
+        <!-- 탭 네비게이션 -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('document')">📄 문서</button>
+            <button class="tab-btn" onclick="switchTab('code')">💻 코드</button>
+            <button class="tab-btn" onclick="switchTab('data')">📊 데이터</button>
+            <button class="tab-btn" onclick="switchTab('stats')">📈 통계</button>
+        </div>
+        
+        <!-- 문서 처리 탭 -->
+        <div id="document" class="tab-content active">
+            <div class="card">
+                <h2>📄 문서 처리</h2>
+                <div class="alert alert-error" id="docError"></div>
+                
+                <div class="form-group">
+                    <label for="docTask">작업 유형:</label>
+                    <select id="docTask">
+                        <option value="write">✍️ 작성</option>
+                        <option value="analyze">🔍 분석</option>
+                        <option value="translate">🌐 번역</option>
+                        <option value="summarize">📋 요약</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="docInput">문서 내용:</label>
+                    <textarea id="docInput" placeholder="분석하거나 작성할 문서 내용을 입력하세요..."></textarea>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn-primary" onclick="processDocument()">처리하기</button>
+                    <button class="btn-secondary" onclick="clearDocument()">초기화</button>
+                </div>
+                
+                <div class="loading" id="docLoading">
+                    <div class="spinner"></div>
+                    <p>처리 중...</p>
+                </div>
+                
+                <div class="result-box" id="docResult">
+                    <div class="result-header">
+                        <h3>📄 처리 결과</h3>
+                        <button class="copy-btn" onclick="copyResult('docResult')">복사</button>
+                    </div>
+                    <div class="result-content" id="docResultContent"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 코드 처리 탭 -->
+        <div id="code" class="tab-content">
+            <div class="card">
+                <h2>💻 코드 처리</h2>
+                <div class="alert alert-error" id="codeError"></div>
+                
+                <div class="two-column">
+                    <div>
+                        <div class="form-group">
+                            <label for="codeTask">작업 유형:</label>
+                            <select id="codeTask">
+                                <option value="review">👀 리뷰</option>
+                                <option value="bug_fix">🐛 버그 수정</option>
+                                <option value="optimize">⚡ 최적화</option>
+                                <option value="explain">📚 설명</option>
+                                <option value="document">📝 문서화</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="codeLanguage">언어:</label>
+                            <select id="codeLanguage">
+                                <option value="python">Python</option>
+                                <option value="javascript">JavaScript</option>
+                                <option value="java">Java</option>
+                                <option value="cpp">C++</option>
+                                <option value="go">Go</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="codeInput">코드:</label>
+                    <textarea id="codeInput" class="code-input" placeholder="코드를 입력하세요..." style="height: 250px;"></textarea>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn-primary" onclick="processCode()">처리하기</button>
+                    <button class="btn-secondary" onclick="clearCode()">초기화</button>
+                </div>
+                
+                <div class="loading" id="codeLoading">
+                    <div class="spinner"></div>
+                    <p>처리 중...</p>
+                </div>
+                
+                <div class="result-box" id="codeResult">
+                    <div class="result-header">
+                        <h3>💻 처리 결과</h3>
+                        <button class="copy-btn" onclick="copyResult('codeResult')">복사</button>
+                    </div>
+                    <div class="result-content" id="codeResultContent"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 데이터 분석 탭 -->
+        <div id="data" class="tab-content">
+            <div class="card">
+                <h2>📊 데이터 분석</h2>
+                <div class="alert alert-error" id="dataError"></div>
+                
+                <div class="two-column">
+                    <div>
+                        <div class="form-group">
+                            <label for="dataType">데이터 유형:</label>
+                            <select id="dataType">
+                                <option value="csv">CSV</option>
+                                <option value="json">JSON</option>
+                                <option value="text">텍스트</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="dataInput">데이터:</label>
+                    <textarea id="dataInput" placeholder="CSV, JSON, 또는 텍스트 데이터를 입력하세요..." style="height: 150px;"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="dataQuestion">분석 질문:</label>
+                    <input type="text" id="dataQuestion" placeholder="예: 평균값은? 트렌드는?">
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn-primary" onclick="analyzeData()">분석하기</button>
+                    <button class="btn-secondary" onclick="generateVisualization()">시각화 코드 생성</button>
+                    <button class="btn-secondary" onclick="clearData()">초기화</button>
+                </div>
+                
+                <div class="loading" id="dataLoading">
+                    <div class="spinner"></div>
+                    <p>분석 중...</p>
+                </div>
+                
+                <div class="result-box" id="dataResult">
+                    <div class="result-header">
+                        <h3>📊 분석 결과</h3>
+                        <button class="copy-btn" onclick="copyResult('dataResult')">복사</button>
+                    </div>
+                    <div class="result-content" id="dataResultContent"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 통계 탭 -->
+        <div id="stats" class="tab-content">
+            <div class="card">
+                <h2>📈 팀 사용량 통계</h2>
+                
+                <div class="form-group">
+                    <label for="statsDays">조회 기간:</label>
+                    <select id="statsDays" onchange="loadStats()">
+                        <option value="7">최근 7일</option>
+                        <option value="14">최근 14일</option>
+                        <option value="30">최근 30일</option>
+                    </select>
+                </div>
+                
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-label">총 요청</div>
+                        <div class="stat-value" id="totalRequests">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">예상 비용</div>
+                        <div class="stat-value" id="totalCost">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">문서 처리</div>
+                        <div class="stat-value" id="docCount">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">코드 처리</div>
+                        <div class="stat-value" id="codeCount">-</div>
+                    </div>
+                </div>
+                
+                <div id="statsDetail" style="margin-top: 30px;">
+                    <h3>📋 상세 통계</h3>
+                    <div style="background: #f9f9f9; padding: 15px; border-radius: 5px; margin-top: 10px;">
+                        <pre id="statsContent" style="margin: 0;"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 탭 전환
+        function switchTab(tabName) {
+            // 모든 탭 숨기기
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 모든 탭 버튼 비활성화
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 선택된 탭 표시
+            document.getElementById(tabName).classList.add('active');
+            
+            // 선택된 버튼 활성화
+            event.target.classList.add('active');
+            
+            // 통계 탭이면 데이터 로드
+            if (tabName === 'stats') {
+                loadStats();
+            }
+        }
+        
+        // ==================== 문서 처리 ====================
+        
+        async function processDocument() {
+            const content = document.getElementById('docInput').value;
+            const taskType = document.getElementById('docTask').value;
+            const errorEl = document.getElementById('docError');
+            const loadingEl = document.getElementById('docLoading');
+            const resultEl = document.getElementById('docResult');
+            
+            if (!content.trim()) {
+                showError(errorEl, '문서 내용을 입력하세요');
+                return;
+            }
+            
+            loadingEl.style.display = 'block';
+            resultEl.classList.remove('show');
+            errorEl.classList.remove('show');
+            
+            try {
+                const response = await fetch('/api/document', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content, task_type: taskType })
+                });
+                
+                const data = await response.json();
+                loadingEl.style.display = 'none';
+                
+                if (data.status === 'error') {
+                    showError(errorEl, data.message);
+                } else {
+                    document.getElementById('docResultContent').textContent = data.result;
+                    resultEl.classList.add('show');
+                }
+            } catch (error) {
+                loadingEl.style.display = 'none';
+                showError(errorEl, '요청 실패: ' + error.message);
+            }
+        }
+        
+        function clearDocument() {
+            document.getElementById('docInput').value = '';
+            document.getElementById('docResult').classList.remove('show');
+            document.getElementById('docError').classList.remove('show');
+        }
+        
+        // ==================== 코드 처리 ====================
+        
+        async function processCode() {
+            const code = document.getElementById('codeInput').value;
+            const taskType = document.getElementById('codeTask').value;
+            const language = document.getElementById('codeLanguage').value;
+            const errorEl = document.getElementById('codeError');
+            const loadingEl = document.getElementById('codeLoading');
+            const resultEl = document.getElementById('codeResult');
+            
+            if (!code.trim()) {
+                showError(errorEl, '코드를 입력하세요');
+                return;
+            }
+            
+            loadingEl.style.display = 'block';
+            resultEl.classList.remove('show');
+            errorEl.classList.remove('show');
+            
+            try {
+                const response = await fetch('/api/code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code, task_type: taskType, language })
+                });
+                
+                const data = await response.json();
+                loadingEl.style.display = 'none';
+                
+                if (data.status === 'error') {
+                    showError(errorEl, data.message);
+                } else {
+                    document.getElementById('codeResultContent').textContent = data.result;
+                    resultEl.classList.add('show');
+                }
+            } catch (error) {
+                loadingEl.style.display = 'none';
+                showError(errorEl, '요청 실패: ' + error.message);
+            }
+        }
+        
+        function clearCode() {
+            document.getElementById('codeInput').value = '';
+            document.getElementById('codeResult').classList.remove('show');
+            document.getElementById('codeError').classList.remove('show');
+        }
+        
+        // ==================== 데이터 분석 ====================
+        
+        async function analyzeData() {
+            const dataContent = document.getElementById('dataInput').value;
+            const question = document.getElementById('dataQuestion').value;
+            const dataType = document.getElementById('dataType').value;
+            const errorEl = document.getElementById('dataError');
+            const loadingEl = document.getElementById('dataLoading');
+            const resultEl = document.getElementById('dataResult');
+            
+            if (!dataContent.trim() || !question.trim()) {
+                showError(errorEl, '데이터와 질문을 모두 입력하세요');
+                return;
+            }
+            
+            loadingEl.style.display = 'block';
+            resultEl.classList.remove('show');
+            errorEl.classList.remove('show');
+            
+            try {
+                const response = await fetch('/api/data-analysis', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: dataContent, question, data_type: dataType })
+                });
+                
+                const data = await response.json();
+                loadingEl.style.display = 'none';
+                
+                if (data.status === 'error') {
+                    showError(errorEl, data.message);
+                } else {
+                    document.getElementById('dataResultContent').textContent = data.analysis;
+                    resultEl.classList.add('show');
+                }
+            } catch (error) {
+                loadingEl.style.display = 'none';
+                showError(errorEl, '요청 실패: ' + error.message);
+            }
+        }
+        
+        async function generateVisualization() {
+            const description = document.getElementById('dataInput').value;
+            const errorEl = document.getElementById('dataError');
+            
+            if (!description.trim()) {
+                showError(errorEl, '데이터 설명을 입력하세요');
+                return;
+            }
+            
+            const loadingEl = document.getElementById('dataLoading');
+            loadingEl.style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/visualization', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ description })
+                });
+                
+                const data = await response.json();
+                loadingEl.style.display = 'none';
+                
+                if (data.status === 'error') {
+                    showError(errorEl, data.message);
+                } else {
+                    document.getElementById('dataResultContent').textContent = data.code;
+                    document.getElementById('dataResult').classList.add('show');
+                }
+            } catch (error) {
+                loadingEl.style.display = 'none';
+                showError(errorEl, '요청 실패: ' + error.message);
+            }
+        }
+        
+        function clearData() {
+            document.getElementById('dataInput').value = '';
+            document.getElementById('dataQuestion').value = '';
+            document.getElementById('dataResult').classList.remove('show');
+            document.getElementById('dataError').classList.remove('show');
+        }
+        
+        // ==================== 통계 ====================
+        
+        async function loadStats() {
+            const days = document.getElementById('statsDays').value;
+            
+            try {
+                const response = await fetch(`/api/usage?days=${days}`);
+                const data = await response.json();
+                
+                // 통계 업데이트
+                document.getElementById('totalRequests').textContent = data.total_requests || 0;
+                document.getElementById('totalCost').textContent = data.estimated_cost.total || '$0';
+                
+                // 분류별 통계
+                let docCount = 0, codeCount = 0;
+                Object.keys(data.by_category || {}).forEach(cat => {
+                    if (cat === 'document') docCount = Object.keys(data.by_category[cat] || {}).length;
+                    if (cat === 'code') codeCount = Object.keys(data.by_category[cat] || {}).length;
+                });
+                
+                document.getElementById('docCount').textContent = docCount;
+                document.getElementById('codeCount').textContent = codeCount;
+                
+                // 상세 통계
+                document.getElementById('statsContent').textContent = JSON.stringify(data.by_category, null, 2);
+            } catch (error) {
+                console.error('통계 로드 실패:', error);
+            }
+        }
+        
+        // ==================== 유틸리티 ====================
+        
+        function showError(element, message) {
+            element.textContent = '❌ ' + message;
+            element.classList.add('show');
+        }
+        
+        function copyResult(elementId) {
+            const content = document.querySelector(`#${elementId} .result-content`).textContent;
+            navigator.clipboard.writeText(content).then(() => {
+                alert('클립보드에 복사되었습니다');
+            }).catch(err => {
+                alert('복사 실패: ' + err);
+            });
+        }
+        
+        // 초기 로드
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 대시보드 준비 완료');
+        });
+    </script>
+</body>
+</html>
